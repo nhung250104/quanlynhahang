@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+
+# Rider
+.idea/
+*.user
+*.suo
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
