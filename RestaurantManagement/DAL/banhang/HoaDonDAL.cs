@@ -10,17 +10,18 @@ public class HoaDonDAL
         using var conn = DatabaseHelper.GetConnection();
         conn.Open();
         var da = new SqlDataAdapter(
-            @"SELECT hd.MaHD, nv.TenNV,
-                     CONVERT(VARCHAR,hd.NgayBan,103) AS NgayBan,
-                     hd.GioVao, hd.GioRa,
-                     FORMAT(hd.TongTienHang,'N0') + N' đ' AS TongTienHang,
-                     FORMAT(hd.ChietKhau,'N0')    + N' đ' AS ChietKhau,
-                     FORMAT(hd.TongThanhToan,'N0') + N' đ' AS TongThanhToan
-              FROM HOADON hd
-              JOIN NHANVIEN nv ON hd.MaNV = nv.MaNV
-              ORDER BY hd.NgayBan DESC", conn);
-        da.Fill(dt);
-        return dt;
+            @"SELECT hd.MaHD, 
+         ISNULL(nv.TenNV, N'Không rõ') AS TenNV,
+         CONVERT(VARCHAR,hd.NgayBan,103) AS NgayBan,
+         hd.GioVao, hd.GioRa,
+         FORMAT(hd.TongTienHang,'N0') + N' đ' AS TongTienHang,
+         FORMAT(hd.ChietKhau,'N0')    + N' đ' AS ChietKhau,
+         FORMAT(hd.TongThanhToan,'N0') + N' đ' AS TongThanhToan
+  FROM HOADON hd
+  LEFT JOIN NHANVIEN nv ON hd.MaNV = nv.MaNV
+  ORDER BY hd.NgayBan DESC", conn);
+        da.Fill(dt);      // ← thiếu dòng này
+        return dt;        // ← thiếu dòng này
     }
 
     // Tìm kiếm theo mã HD hoặc khoảng ngày
@@ -55,16 +56,19 @@ public class HoaDonDAL
         using var conn = DatabaseHelper.GetConnection();
         conn.Open();
 
-        // Sinh mã HD theo pattern HD + 7 số như trong dump data
         var cmdMa = new SqlCommand(
             @"SELECT 'HD' + RIGHT('0000000' +
-              CAST(ISNULL(MAX(CAST(RIGHT(MaHD,7) AS INT)),0) + 1 AS VARCHAR(7)), 7)
-              FROM HOADON", conn);
+          CAST(ISNULL(MAX(
+              CASE WHEN MaHD LIKE 'HD[0-9][0-9][0-9][0-9][0-9][0-9][0-9]' 
+                   THEN CAST(RIGHT(MaHD,7) AS INT) 
+                   ELSE 0 END
+          ),0) + 1 AS VARCHAR(7)), 7)
+          FROM HOADON", conn);
         string maHD = cmdMa.ExecuteScalar()?.ToString() ?? "HD0000001";
 
         var cmd = new SqlCommand(
             @"INSERT INTO HOADON (MaHD, MaNV, NgayBan, GioVao, TongTienHang, ChietKhau, TongThanhToan)
-              VALUES (@MaHD, @MaNV, CAST(GETDATE() AS DATE), CAST(GETDATE() AS TIME), 0, 0, 0)", conn);
+          VALUES (@MaHD, @MaNV, CAST(GETDATE() AS DATE), CAST(GETDATE() AS TIME), 0, 0, 0)", conn);
         cmd.Parameters.AddWithValue("@MaHD", maHD);
         cmd.Parameters.AddWithValue("@MaNV", maNV);
         cmd.ExecuteNonQuery();

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace RestaurantManagement.Forms.sanpham
+namespace RestaurantManagement.sanpham
 {
     partial class Form_NguyenLieu
     {

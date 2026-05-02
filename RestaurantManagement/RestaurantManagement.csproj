@@ -22,6 +22,18 @@
       <Compile Update="Forms\sanpham\Form_NguyenLieu.cs">
         <SubType>Form</SubType>
       </Compile>
+      <Compile Update="Forms\kho\Form_CTPhieuNhap.cs">
+        <SubType>Form</SubType>
+      </Compile>
+      <Compile Update="Forms\kho\Form_NhaCungCap.cs">
+        <SubType>Form</SubType>
+      </Compile>
+      <Compile Update="Forms\kho\Form_PhieuNhap.cs">
+        <SubType>Form</SubType>
+      </Compile>
+      <Compile Update="Form_Main.cs">
+        <SubType>Form</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@ using System;
 using System.Windows.Forms;
 using System.Data;
 
-namespace RestaurantManagement.Forms.sanpham
+namespace RestaurantManagement.sanpham
 {
     public partial class Form_BangGia : Form
     {

@@ -88,6 +88,15 @@ namespace RestaurantManagement.banhang
             btnLamMoi.Location = new System.Drawing.Point(312, 450);
             btnLamMoi.Size     = new System.Drawing.Size(90, 32);
             btnLamMoi.Click   += new System.EventHandler(btnLamMoi_Click);
+            // === THÊM VÀO FORM ===
+            this.Load += new System.EventHandler(this.Form_NhanVien_Load); // ← thêm dòng này
+            this.Controls.AddRange(new System.Windows.Forms.Control[]
+            {
+                lblTim, txtTimKiem, btnTimKiem,
+                dgvNhanVien,
+                lblMaNV, lblTen, txtTenNV,
+                btnThem, btnSua, btnXoa, btnLamMoi
+            });
 
             // === THÊM VÀO FORM ===
             this.Controls.AddRange(new System.Windows.Forms.Control[]

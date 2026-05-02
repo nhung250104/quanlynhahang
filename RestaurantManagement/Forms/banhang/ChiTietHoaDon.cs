@@ -148,8 +148,19 @@ namespace RestaurantManagement.banhang
             var dt = dgvChiTiet.DataSource as DataTable;
             if (dt != null)
                 foreach (DataRow row in dt.Rows)
-                    if (decimal.TryParse(row["ThanhTien"].ToString(), out decimal val))
+                {
+                    var raw = row["ThanhTien"].ToString()
+                        .Replace(" đ", "")
+                        .Replace(",", "")
+                        .Trim();
+                    if (decimal.TryParse(raw, out decimal val))
                         tong += val;
+                }
+
+            // Chiết khấu là tỉ lệ (0.25 = 25%) theo đúng logic SQL nhóm
+            if (decimal.TryParse(txtChietKhau.Text, out decimal ck) && ck > 0 && ck <= 1)
+                tong = tong - (tong * ck);
+
             lblTongTien.Text = "Tổng: " + tong.ToString("N0") + " đ";
         }
 
