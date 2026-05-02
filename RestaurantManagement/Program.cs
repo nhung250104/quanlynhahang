@@ -1,6 +1,5 @@
 using System;
 using System.Windows.Forms;
-using RestaurantManagement.Forms.sanpham;
 
 namespace RestaurantManagement
 {
@@ -12,81 +11,33 @@ namespace RestaurantManagement
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            TestKetNoi();
+            // Test kết nối trước khi mở hệ thống
+            if (!TestKetNoi()) return; // nếu lỗi DB thì không mở
 
-            Application.Run(new Form_SanPham());
+            // Mở menu chính
+            Application.Run(new Form_Main());
         }
 
-        static void TestKetNoi()
-        {
-            var ketQua = new System.Text.StringBuilder();
-            int thanhCong = 0;
-            int thatBai   = 0;
-
-            try
-            {
-                using var conn = DatabaseHelper.GetConnection();
-                conn.Open();
-                ketQua.AppendLine("✅ KẾT NỐI DB: THÀNH CÔNG");
-                ketQua.AppendLine($"   Server  : {conn.DataSource}");
-                ketQua.AppendLine($"   Database: {conn.Database}");
-                ketQua.AppendLine();
-                thanhCong++;
-            }
-            catch (Exception ex)
-            {
-                ketQua.AppendLine("❌ KẾT NỐI DB: THẤT BẠI");
-                ketQua.AppendLine($"   Lỗi: {ex.Message}");
-                ketQua.AppendLine();
-                thatBai++;
-            }
-
-            ketQua.AppendLine("─── LUỒNG 1: BÁN HÀNG ───");
-            TestBang("NHANVIEN",   ref thanhCong, ref thatBai, ketQua);
-            TestBang("HOADON",     ref thanhCong, ref thatBai, ketQua);
-            TestBang("CTHOADON",   ref thanhCong, ref thatBai, ketQua);
-            ketQua.AppendLine();
-
-            ketQua.AppendLine("─── LUỒNG 2: KHO ───");
-            TestBang("NHACUNGCAP",  ref thanhCong, ref thatBai, ketQua);
-            TestBang("PHIEUNHAP",   ref thanhCong, ref thatBai, ketQua);
-            TestBang("CTPHIEUNHAP", ref thanhCong, ref thatBai, ketQua);
-            ketQua.AppendLine();
-
-            ketQua.AppendLine("─── LUỒNG 3: SẢN PHẨM / NGUYÊN LIỆU / GIÁ ───");
-            TestBang("SANPHAM",    ref thanhCong, ref thatBai, ketQua);
-            TestBang("NGUYENLIEU", ref thanhCong, ref thatBai, ketQua);
-            TestBang("CTSANPHAM",  ref thanhCong, ref thatBai, ketQua);
-            TestBang("BANGGIA",    ref thanhCong, ref thatBai, ketQua);
-
-            ketQua.AppendLine();
-            ketQua.AppendLine($"══════════════════════════════");
-            ketQua.AppendLine($"✅ Thành công: {thanhCong}/11");
-            ketQua.AppendLine($"❌ Thất bại : {thatBai}/11");
-
-            MessageBox.Show(
-                ketQua.ToString(),
-                thatBai == 0 ? "✅ TẤT CẢ KẾT NỐI THÀNH CÔNG" : "⚠️ CÓ LỖI KẾT NỐI",
-                MessageBoxButtons.OK,
-                thatBai == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
-        }
-
-        static void TestBang(string tenBang, ref int thanhCong, ref int thatBai, System.Text.StringBuilder ketQua)
+        static bool TestKetNoi()
         {
             try
             {
                 using var conn = DatabaseHelper.GetConnection();
                 conn.Open();
-                var cmd = new Microsoft.Data.SqlClient.SqlCommand(
-                    $"SELECT COUNT(*) FROM {tenBang}", conn);
-                int count = (int)cmd.ExecuteScalar();
-                ketQua.AppendLine($"✅ {tenBang,-15}: {count} bản ghi");
-                thanhCong++;
+                return true; // kết nối OK → mở hệ thống
             }
             catch (Exception ex)
             {
-                ketQua.AppendLine($"❌ {tenBang,-15}: {ex.Message}");
-                thatBai++;
+                MessageBox.Show(
+                    $"❌ KHÔNG THỂ KẾT NỐI DATABASE!\n\n{ex.Message}\n\n" +
+                    "Kiểm tra lại:\n" +
+                    "1. SQL Server đang chạy chưa?\n" +
+                    "2. Tên Server trong DatabaseHelper.cs có đúng không?\n" +
+                    "3. Tên Database 'QuanLyCuaHang' có đúng không?",
+                    "Lỗi kết nối DB",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return false;
             }
         }
     }
