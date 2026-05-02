@@ -13,13 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Forms\banhang\Form_NhanVien.cs">
+      <Compile Update="Forms\sanpham\Form_SanPham.cs">
         <SubType>Form</SubType>
       </Compile>
-      <Compile Update="Forms\banhang\Form_HoaDon.cs">
+      <Compile Update="Forms\sanpham\Form_BangGia.cs">
         <SubType>Form</SubType>
       </Compile>
-      <Compile Update="Forms\banhang\ChiTietHoaDon.cs">
+      <Compile Update="Forms\sanpham\Form_NguyenLieu.cs">
         <SubType>Form</SubType>
       </Compile>
     </ItemGroup>
