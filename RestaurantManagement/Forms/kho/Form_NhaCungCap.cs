@@ -5,7 +5,6 @@ namespace RestaurantManagement
 {
     public partial class Form_NhaCungCap : Form
     {
-        private readonly NhaCungCapDAL _dal = new NhaCungCapDAL();
         private string _maNCCDangChon = null;
 
         public Form_NhaCungCap()
@@ -13,142 +12,168 @@ namespace RestaurantManagement
             InitializeComponent();
         }
 
-        private void Form_NhaCungCap_Load(object sender, EventArgs e) => LoadData();
+        private void Form_NhaCungCap_Load(object sender, EventArgs e)
+        {
+            LoadData();
 
+            // Phân quyền UI
+            if (DatabaseHelper.CurrentRole != "ADMIN")
+            {
+                btnSua.Enabled = false;
+                btnXoa.Enabled = false;
+            }
+        }
+
+        /* =====================================================
+           LOAD DATA (PHÂN QUYỀN)
+        ===================================================== */
         private void LoadData()
         {
             try
             {
-                dgvNCC.DataSource = _dal.GetAll();
+                if (DatabaseHelper.CurrentRole == "ADMIN")
+                    dgvNCC.DataSource = DatabaseHelper.GetNhaCungCapFull();
+                else
+                    dgvNCC.DataSource = DatabaseHelper.GetNhaCungCap();
+
                 FormatGrid();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi: " + ex.Message);
             }
         }
 
+        /* =====================================================
+           FORMAT GRID
+        ===================================================== */
         private void FormatGrid()
         {
             var cols = new[]
             {
-                ("MaNCC","Mã NCC"), ("TenNCC","Tên nhà cung cấp"),
-                ("DiaChiNCC","Địa chỉ"), ("SDTNCC","Số điện thoại")
+                ("MaNCC","Mã NCC"),
+                ("TenNCC","Tên nhà cung cấp"),
+                ("DiaChiNCC","Địa chỉ"),
+                ("SDTNCC","Số điện thoại")
             };
-            foreach (var (col, header) in cols)
-                if (dgvNCC.Columns.Contains(col))
-                    dgvNCC.Columns[col].HeaderText = header;
+
+            foreach (var col in cols)
+            {
+                if (dgvNCC.Columns.Contains(col.Item1))
+                    dgvNCC.Columns[col.Item1].HeaderText = col.Item2;
+            }
+
             dgvNCC.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvNCC.ReadOnly    = true;
+            dgvNCC.ReadOnly = true;
             dgvNCC.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+            // Ẩn địa chỉ nếu không phải admin
+            if (DatabaseHelper.CurrentRole != "ADMIN")
+            {
+                if (dgvNCC.Columns.Contains("DiaChiNCC"))
+                    dgvNCC.Columns["DiaChiNCC"].Visible = false;
+            }
         }
 
+        /* =====================================================
+           CLICK GRID
+        ===================================================== */
         private void dgvNCC_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
-            var row        = dgvNCC.Rows[e.RowIndex];
+
+            var row = dgvNCC.Rows[e.RowIndex];
+
             _maNCCDangChon = row.Cells["MaNCC"].Value?.ToString();
             txtTenNCC.Text = row.Cells["TenNCC"].Value?.ToString();
-            txtSDT.Text    = row.Cells["SDTNCC"].Value?.ToString();
-            txtDiaChi.Text = row.Cells["DiaChiNCC"].Value?.ToString();
-            lblMaNCC.Text  = "Mã NCC: " + _maNCCDangChon;
+            txtSDT.Text = row.Cells["SDTNCC"].Value?.ToString();
+
+            if (dgvNCC.Columns.Contains("DiaChiNCC"))
+                txtDiaChi.Text = row.Cells["DiaChiNCC"].Value?.ToString();
+
+            lblMaNCC.Text = "Mã NCC: " + _maNCCDangChon;
         }
 
+        /* =====================================================
+           TÌM KIẾM
+        ===================================================== */
         private void btnTimKiem_Click(object sender, EventArgs e)
         {
-            dgvNCC.DataSource = string.IsNullOrWhiteSpace(txtTimKiem.Text)
-                ? _dal.GetAll()
-                : _dal.Search(txtTimKiem.Text.Trim());
+            if (string.IsNullOrWhiteSpace(txtTimKiem.Text))
+            {
+                LoadData();
+                return;
+            }
+
+            dgvNCC.DataSource = DatabaseHelper.TimNhaCungCap(txtTimKiem.Text.Trim());
             FormatGrid();
         }
 
+        /* =====================================================
+           THÊM
+        ===================================================== */
         private void btnThem_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtTenNCC.Text) ||
-                string.IsNullOrWhiteSpace(txtSDT.Text)    ||
+                string.IsNullOrWhiteSpace(txtSDT.Text) ||
                 string.IsNullOrWhiteSpace(txtDiaChi.Text))
             {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin.", "Cảnh báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin.");
                 return;
             }
-            try
+
+            bool ok = DatabaseHelper.ThemNhaCungCap(
+                txtTenNCC.Text.Trim(),
+                txtSDT.Text.Trim(),
+                txtDiaChi.Text.Trim()
+            );
+
+            if (ok)
             {
-                _dal.Insert(txtTenNCC.Text.Trim(),
-                            txtSDT.Text.Trim(),
-                            txtDiaChi.Text.Trim());
-                MessageBox.Show("Thêm nhà cung cấp thành công!", "Thành công",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadData(); LamMoi();
+                MessageBox.Show("Thêm thành công!");
+                LoadData();
+                LamMoi();
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Thêm thất bại!");
             }
         }
 
+        /* =====================================================
+           SỬA (TẠM KHÓA)
+        ===================================================== */
         private void btnSua_Click(object sender, EventArgs e)
         {
-            if (_maNCCDangChon == null)
-            {
-                MessageBox.Show("Chọn nhà cung cấp cần sửa.", "Cảnh báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            try
-            {
-                _dal.Update(_maNCCDangChon,
-                            txtTenNCC.Text.Trim(),
-                            txtSDT.Text.Trim(),
-                            txtDiaChi.Text.Trim());
-                MessageBox.Show("Cập nhật thành công!", "Thành công",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadData(); LamMoi();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            MessageBox.Show("Chưa hỗ trợ sửa (cần SP UPDATE).");
         }
 
+        /* =====================================================
+           XÓA (TẠM KHÓA)
+        ===================================================== */
         private void btnXoa_Click(object sender, EventArgs e)
         {
-            if (_maNCCDangChon == null)
-            {
-                MessageBox.Show("Chọn nhà cung cấp cần xóa.", "Cảnh báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            var cf = MessageBox.Show(
-                $"Xóa nhà cung cấp '{txtTenNCC.Text}'?\n" +
-                "Lưu ý: Sẽ lỗi nếu NCC đã có phiếu nhập liên kết.",
-                "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (cf != DialogResult.Yes) return;
-            try
-            {
-                _dal.Delete(_maNCCDangChon);
-                MessageBox.Show("Xóa thành công!", "Thành công",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadData(); LamMoi();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            MessageBox.Show("Chưa hỗ trợ xóa (cần SP DELETE).");
         }
 
-        private void btnLamMoi_Click(object sender, EventArgs e) => LamMoi();
+        /* =====================================================
+           LÀM MỚI
+        ===================================================== */
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            LamMoi();
+        }
 
         private void LamMoi()
         {
-            txtTenNCC.Clear(); txtSDT.Clear(); txtDiaChi.Clear();
+            txtTenNCC.Clear();
+            txtSDT.Clear();
+            txtDiaChi.Clear();
             txtTimKiem.Clear();
+
             _maNCCDangChon = null;
-            lblMaNCC.Text  = "Mã NCC: (chưa chọn)";
+            lblMaNCC.Text = "Mã NCC: (chưa chọn)";
+
             dgvNCC.ClearSelection();
         }
     }
