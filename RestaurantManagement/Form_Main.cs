@@ -1,8 +1,7 @@
 using System;
 using System.Windows.Forms;
-using RestaurantManagement.banhang;   // Form_NhanVien, Form_HoaDon
-using RestaurantManagement;       // Form_NhaCungCap, Form_PhieuNhap
-using RestaurantManagement.sanpham;   // Form_SanPham, Form_NguyenLieu, Form_BangGia
+using RestaurantManagement.banhang;
+using RestaurantManagement.sanpham;
 
 namespace RestaurantManagement
 {
@@ -16,6 +15,46 @@ namespace RestaurantManagement
         private void Form_Main_Load(object sender, EventArgs e)
         {
             lblTieuDe.Text = "HỆ THỐNG QUẢN LÝ NHÀ HÀNG";
+            PhanQuyenGiaoDien();
+        }
+
+        private void PhanQuyenGiaoDien()
+        {
+            if (DatabaseHelper.CurrentRole == "NV")
+            {
+                btnNhanVien.Visible = false;
+                btnBangGia.Visible  = false;
+
+                // BÁN HÀNG
+                btnHoaDon.Location = new System.Drawing.Point(80, 113);
+
+                // KHO
+                btnNhaCungCap.Location = new System.Drawing.Point(80, 210);
+                btnPhieuNhap.Location  = new System.Drawing.Point(80, 265);
+
+                // SẢN PHẨM
+                btnSanPham.Location    = new System.Drawing.Point(120, 340);
+                btnNguyenLieu.Location = new System.Drawing.Point(285, 340);
+
+                // THOÁT
+                btnThoat.Location = new System.Drawing.Point(190, 400);
+                this.Size = new System.Drawing.Size(540, 480);
+
+                // Dịch labels
+                foreach (System.Windows.Forms.Control c in this.Controls)
+                {
+                    if (c is System.Windows.Forms.Label lbl)
+                    {
+                        if (lbl.Text.Contains("KHO"))
+                            lbl.Location = new System.Drawing.Point(30, 175);
+                        if (lbl.Text.Contains("SẢN PHẨM"))
+                            lbl.Location = new System.Drawing.Point(30, 310);
+                    }
+                }
+
+                // Resize form vừa đủ chứa tất cả
+                this.Size = new System.Drawing.Size(540, 460);
+            }
         }
 
         // ── LUỒNG 1: BÁN HÀNG ──
